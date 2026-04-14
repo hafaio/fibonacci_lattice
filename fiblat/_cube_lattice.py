@@ -28,4 +28,4 @@ def cube_lattice(dim: int, num_points: int) -> NDArray[np.float64]:  # pragma: n
         raise ValueError(f"must request at least one point: {num_points}")
     rest = np.sqrt(n_primes(dim - 1))
     mults = np.concatenate((np.full(1, 1 / num_points), rest))
-    return (mults * np.arange(num_points)[:, None]) % 1.0
+    return (mults * np.arange(num_points)[:, None]) % 1.0  # type: ignore[return-value]
