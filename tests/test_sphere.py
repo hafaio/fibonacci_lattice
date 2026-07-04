@@ -5,6 +5,7 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
 from fiblat import sphere_lattice
+from fiblat._sphere_lattice import inv_int_sin_m, inv_int_sin_ms
 
 
 def test_on_unit_sphere(benchmark: BenchmarkFixture) -> None:
@@ -36,6 +37,14 @@ def test_evenly_distributed() -> None:
     min_dists = dists.min(-1)
     errors = np.sum(min_dists < 0.3)  # noqa: PLR2004
     assert errors < 9  # noqa: PLR2004
+
+
+def test_inv_int_sin_ms_duplicate_targets() -> None:
+    """Test duplicate targets don't trigger unbounded recursion."""
+    results = np.empty(2)
+    inv_int_sin_ms(results, np.array([0.5, 0.5]), 2, 0.0, np.pi, 1e-10)
+    expected = inv_int_sin_m(0.5, 2, 0.0, np.pi, 1e-10)
+    assert np.allclose(results, expected)
 
 
 def test_invalid_inputs() -> None:
