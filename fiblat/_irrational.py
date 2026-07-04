@@ -6,7 +6,7 @@ _SMALL_PRIMES = np.array([2, 3, 5, 7, 11], "i8")  # first five primes
 
 
 @nb.jit(nb.int64[:](nb.int64), cache=True, nogil=True)
-def n_primes(n: int) -> NDArray[np.float64]:  # pragma: nocover
+def n_primes(n: int) -> NDArray[np.int64]:  # pragma: nocover
     """Create an array of the first n primes."""
     if n <= 0:
         return np.empty(0, "i8")
