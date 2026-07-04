@@ -82,10 +82,13 @@ def inv_int_sin_ms(  # noqa: PLR0913
         results[0] = inv_int_sin_m(targets[0], m, lower, upper, atol)
     else:
         mid = (lower + upper) / 2
-        approx = int_sin_m(mid, m)
-        ind = np.searchsorted(targets, approx)
-        inv_int_sin_ms(results[:ind], targets[:ind], m, lower, mid, atol)
-        inv_int_sin_ms(results[ind:], targets[ind:], m, mid, upper, atol)
+        if mid <= lower or mid >= upper:
+            results[:] = mid
+        else:
+            approx = int_sin_m(mid, m)
+            ind = np.searchsorted(targets, approx)
+            inv_int_sin_ms(results[:ind], targets[:ind], m, lower, mid, atol)
+            inv_int_sin_ms(results[ind:], targets[ind:], m, mid, upper, atol)
 
 
 _HLP = log(pi) / 2
