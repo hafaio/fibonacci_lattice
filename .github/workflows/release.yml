@@ -121,15 +121,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "v${{ needs.prepare.outputs.version }}" --generate-notes
 
-  docs:
+  docs-build:
     needs: [release, prepare]
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
         with:
@@ -148,6 +142,17 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: "./out/html"
+
+  docs-deploy:
+    needs: docs-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
