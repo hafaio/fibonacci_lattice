@@ -17,14 +17,14 @@ def n_primes(n: int) -> NDArray[np.int64]:  # pragma: nocover
         res[0] = 2
         # Rosser's bound: p_n < n (ln n + ln ln n) for n >= 6
         max_num = int(n * (np.log(n) + np.log(np.log(n)))) + 1
-        seive = np.ones((max_num - 1) // 2, "?")
+        sieve = np.ones((max_num - 1) // 2, "?")
         j = 1
         for i in range(3, max_num + 1, 2):
-            if seive[(i - 3) // 2]:
+            if sieve[(i - 3) // 2]:
                 res[j] = i
                 j += 1
                 if j == n:
                     return res
                 else:
-                    seive[(i**2 - 3) // 2 :: i] = False
+                    sieve[(i**2 - 3) // 2 :: i] = False
         raise ValueError("inaccurate bound")
