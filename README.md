@@ -32,10 +32,6 @@ uv run pyright
 uv run pytest
 ```
 
-## Publishing
-
-```sh
-rm -rf dist
-uv build
-uv publish --username __token__
-```
+Releases run via the `release` workflow (a manual `workflow_dispatch` with a
+patch/minor/major bump), which gates, bumps, tags, and publishes to PyPI via OIDC
+trusted publishing.
