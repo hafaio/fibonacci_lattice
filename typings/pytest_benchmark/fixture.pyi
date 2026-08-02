@@ -1,10 +1,10 @@
 from collections.abc import Callable
 from typing import ParamSpec, TypeVar
 
-P = ParamSpec("P")
-R = TypeVar("R")
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 class BenchmarkFixture:
     def __call__(
-        self, func: Callable[P, R], /, *args: P.args, **kwargs: P.kwargs
-    ) -> R: ...
+        self, func: Callable[_P, _R], /, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R: ...

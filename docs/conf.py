@@ -1,7 +1,7 @@
 """Sphinx build."""
 
 import sys
-from datetime import date
+from datetime import UTC, datetime
 from importlib.metadata import version as package_version
 from os import path
 
@@ -19,5 +19,5 @@ project = "fiblat"
 version = package_version(project)
 release = version
 
-copyright = f"{date.today().year:d} Erik Brinkman"  # noqa: A001
+copyright = f"{datetime.now(tz=UTC).year:d} Erik Brinkman"  # noqa: A001
 author = "Erik Brinkman"
