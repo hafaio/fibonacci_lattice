@@ -63,7 +63,7 @@ def inv_int_sin_m(
     cache=True,
     nogil=True,
 )
-def inv_int_sin_ms(  # noqa: PLR0913
+def inv_int_sin_ms(  # noqa: PLR0913, PLR0917
     results: NDArray[np.float64],
     targets: NDArray[np.float64],
     m: int,
