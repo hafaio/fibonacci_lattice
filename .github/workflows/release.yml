@@ -1,63 +1,30 @@
+# Publish a tagged release to PyPI, then the GitHub release; keep the name release.yml for PyPI trusted publishing.
 name: release
-
 on:
   workflow_dispatch:
     inputs:
-      bump:
-        description: "Version bump type"
+      tag:
+        description: "Release tag to publish (e.g. v0.3.0)"
         required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+        type: string
 
 permissions:
-  contents: read
+  contents: write # create the GitHub release
+  id-token: write # trusted publishing to PyPI
 
 jobs:
-  gate:
-    uses: ./.github/workflows/build.yml
-
-  prepare:
-    runs-on: ubuntu-latest
-    needs: gate
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - name: Install uv
-        run: python -m pip install uv
-      - name: Compute new version
-        id: bump
-        run: |
-          current=$(uv version | cut -d' ' -f2)
-          IFS='.' read -r major minor patch <<< "$current"
-          case "${{ inputs.bump }}" in
-            major) major=$((major + 1)); minor=0; patch=0 ;;
-            minor) minor=$((minor + 1)); patch=0 ;;
-            patch) patch=$((patch + 1)) ;;
-          esac
-          version="${major}.${minor}.${patch}"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "New version: ${version}"
-
   build:
-    needs: prepare
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          ref: ${{ inputs.tag }}
       - name: Install uv
-        run: python -m pip install uv
-      - name: Set version
-        run: uv version ${{ needs.prepare.outputs.version }} --frozen
-      - name: Build
+        uses: astral-sh/setup-uv@v8.3.2
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Build wheel and sdist
         run: uv build
       - uses: actions/upload-artifact@v7
         with:
@@ -67,85 +34,28 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
+    # a dedicated environment scopes the OIDC token to this upload-only job
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fiblat/
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
 
-  release:
-    needs: [prepare, publish]
+  github-release:
+    needs: publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
-      - name: Install uv
-        run: python -m pip install uv
-      - name: Set version and commit
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          uv version "$VERSION" --frozen
-          uv lock
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml uv.lock
-          git commit -m "v${VERSION}"
-          git tag -a "v${VERSION}" -m "v${VERSION}"
-          git push --follow-tags
+          ref: ${{ inputs.tag }}
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "v${{ needs.prepare.outputs.version }}" --generate-notes
-
-  docs-build:
-    needs: [release, prepare]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: v${{ needs.prepare.outputs.version }}
-      - uses: actions/configure-pages@v6
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install uv
-          uv sync
-      - name: Build site
-        run: uv run sphinx-build -M html docs out
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: "./out/html"
-
-  docs-deploy:
-    needs: docs-build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+        run: gh release create "${{ inputs.tag }}" --generate-notes
