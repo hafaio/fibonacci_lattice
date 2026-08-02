@@ -1,15 +1,12 @@
 """Sphinx build."""
 
 import sys
-import tomllib
 from datetime import date
+from importlib.metadata import version as package_version
 from os import path
 
 # make sure one level up is on python path
 sys.path.append(path.abspath(".."))
-
-with open("../pyproject.toml", "rb") as fh:
-    toml = tomllib.load(fh)
 
 extensions = [
     "sphinx.ext.coverage",
@@ -18,11 +15,9 @@ extensions = [
     "myst_parser",
 ]
 
-pyproject = toml["project"]
-
-project = pyproject["name"]
-version = pyproject["version"]
-release = pyproject["version"]
+project = "fiblat"
+version = package_version(project)
+release = version
 
 copyright = f"{date.today().year:d} Erik Brinkman"  # noqa: A001
 author = "Erik Brinkman"
